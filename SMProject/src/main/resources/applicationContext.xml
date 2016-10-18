@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/task
+		http://www.springframework.org/schema/task/spring-task-4.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.1.xsd">
+	<!-- 定义自动注解扫描的操作 -->
+	<context:annotation-config />
+	<context:component-scan base-package="cn.ymq" />
+	<!-- 导入所有与数据库连接有关的信息项 -->
+	<context:property-placeholder location="classpath:database.properties" />
+	<!-- 进行数据库连接池的配置 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${db.driver}" />	<!-- 驱动程序 -->
+		<property name="jdbcUrl" value="${db.url}" /><!-- 连接地址 -->
+		<property name="user" value="${db.user}" />	<!-- 用户名 -->
+		<property name="password" value="${db.password}" />	<!-- 密码 -->
+		<property name="maxPoolSize" value="${db.maxPoolSize}" />	<!-- 最大的可用连接数 -->
+		<property name="minPoolSize" value="${db.minPoolSize}" />	<!-- 最小维持的连接数 -->
+		<property name="initialPoolSize" value="${db.initialPoolSize}" />	<!-- 初始化连接数 -->
+		<property name="maxIdleTime" value="${db.maxIdleTime}" />	<!-- 最大等待连接 -->
+	</bean>
+	<!-- 定义Spring与MyBatis整合的操作控制，此时数据库的连接对象取得由Spring负责 -->
+	<bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations" value="classpath:cn/ymq/vo/mapping/*.xml" />
+		<property name="configLocation" value="classpath:mybatis.cfg.xml" />
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 定义该包中的访问为自动配置实现 -->
+		<property name="basePackage" value="cn.ymq.dao" />
+		<property name="sqlSessionFactoryBeanName" value="sessionFactory" />
+	</bean>
+
+	<!-- 定义数据库的声明式事务控制，直接与业务方法对应 -->
+	<!-- 定义事务的处理切入点 -->
+	<aop:config expose-proxy="true">
+		<aop:pointcut expression="execution(* cn.ymq..service..*.*(..))"
+			id="pointcut" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut" />
+	</aop:config>
+	<!-- 进入到了事务的配置声明 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<!-- 定义一切与服务层有关的控制方法名称，只要是使用了特定的名称那么就会自动处理事务 -->
+		<tx:attributes>
+			<tx:method name="insert*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="edit*" propagation="REQUIRED" />
+			<tx:method name="change*" propagation="REQUIRED" />
+			<tx:method name="remove*" propagation="REQUIRED" />
+			<tx:method name="login*" propagation="REQUIRED" />
+			<tx:method name="rm*" propagation="REQUIRED" />
+			<tx:method name="get*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="check*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="load*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="list*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="*" propagation="REQUIRED" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 定义数据库的事务控制，本事务控制直接针对于数据库连接操作进行 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+</beans>

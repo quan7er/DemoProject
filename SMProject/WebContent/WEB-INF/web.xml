@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID" version="3.1">
+  <display-name>SMProject</display-name>
+	<!-- 在WEB容器里面进行Spring容器的加载 -->
+	<listener>
+		<listener-class>
+			org.springframework.web.context.ContextLoaderListener
+		</listener-class>
+	</listener> 
+	<!-- 此配置描述的是在项目开发过程之中，Spring容器所需要使用到的配置文件 -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:applicationContext.xml</param-value>
+	</context-param> 
+	<!-- 此为Spring MVC配置所需要的程序文件，所有的请求都提交给Spring的Servlet程序 -->
+	<servlet>
+		<servlet-name>springmvc</servlet-name>
+		<!-- 此为Spring MVC自己提供的servlet程序，一定要写上，因为其可以处理用户请求 -->
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<!-- 配置Spring MVC所需要的配置文件，可以与Spring容器写在一起 -->
+			<param-value>classpath:applicationMVC.xml</param-value>
+		</init-param>
+	</servlet>
+	<!-- SpringMVC中所有路径的请求映射，使用的是“*.action” -->
+	<servlet-mapping>
+		<servlet-name>springmvc</servlet-name>
+		<url-pattern>*.action</url-pattern>
+	</servlet-mapping>
+	<!-- Spring中提供的编码过滤器，使用的编码都是UTF-8 -->
+	<filter>
+		<filter-name>encoding</filter-name>
+		<filter-class>
+			org.springframework.web.filter.CharacterEncodingFilter
+		</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value> 
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>encoding</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	<welcome-file-list>
+		<welcome-file>login.jsp</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+</web-app>
